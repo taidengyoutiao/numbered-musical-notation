@@ -1,6 +1,6 @@
 <template>
   <div class="note" :style="{width: noteWidth}">
-    {{noteKey}}
+    <sup v-if="String(noteKey).indexOf('@') !== -1">b</sup><sup v-if="String(noteKey).indexOf('#') !== -1">#</sup><span>{{String(noteKey) | noteKeyFilter}}</span>
     <!-- tempo decoration -->
     <template v-if="noteTempo == 1">
       <div class="deco-sixteen1"></div>
@@ -9,7 +9,16 @@
     <template v-if="noteTempo == 2">
       <div class="deco-eight"></div>
     </template>
-    <template v-if="noteTempo == 4">
+    <template v-if="noteTempo == 3">
+      <div class="deco-eight"></div>
+      <div class="deco-dot">
+        <div class="dot"></div>
+      </div>
+    </template>
+    <template v-if="noteTempo == 6">
+      <div class="deco-dot">
+        <div class="dot"></div>
+      </div>
     </template>
     <!-- range decoration -->
     <template v-if="noteRange == 1">
@@ -56,13 +65,17 @@ export default {
     noteWidth () {
       if (this.noteTempo === 1) {
         return '10px'
-      } else if (this.noteTempo === 2) {
+      } else if (this.noteTempo === 2 || this.noteTempo === 3) {
         return '20px'
-      } else if (this.noteTempo === 4) {
+      } else if (this.noteTempo === 4 || this.noteTempo === 6) {
         return '40px'
       } else {
-        return '100px'
       }
+    }
+  },
+  filters: {
+    noteKeyFilter (s) {
+      return s.replace(/[@#]/, '')
     }
   }
 }
@@ -109,5 +122,24 @@ export default {
       height: 2px;
       border-radius: 50%;
     }
+  }
+  .deco-dot {
+    position: absolute;
+    width: 100%;
+    height: 20px;
+    top: 0;
+    left: 0;
+    .dot {
+      position: absolute;
+      right: 0;
+      top: 9px;
+      background-color: #000;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+    }
+  }
+  sup {
+    vertical-align: 0;
   }
 </style>

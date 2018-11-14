@@ -20,8 +20,11 @@ export default {
       ],
       tempoMap: {
         q: 4,
+        rot: 'rot',
         w: 2,
-        e: 1
+        e: 1,
+        qw: 6,
+        we: 3
       }
     }
   },
@@ -38,11 +41,22 @@ export default {
         let key = 0
         let range = 0
         let tempo = 0
-        key = note.replace(/[\^$]*/, '').replace(/[qwe]/, '')
-        range = note.replace(/[0-7][qwe]/, '').indexOf('^') !== -1 ? note.replace(/[0-7][qwe]/, '').length : -note.replace(/[0-7][qwe]/, '').length
-        tempo = note.replace(/[\^$0-7]*/, '')
-        console.log(note, key, range, that.tempoMap[tempo])
-        barArr.push({key, range, tempo: that.tempoMap[tempo]})
+        key = note.replace(/[\^$]*/, '').replace(/[qwe]{1,4}/, '')
+        range = note.replace(/[@#0-7][qwe]/, '').indexOf('^') !== -1 ? note.replace(/[@#0-7][qwe]/, '').length : -note.replace(/[@#0-7][qwe]/, '').length
+        tempo = note.replace(/[\^$@#0-7]*/, '')
+        console.log(note, key, range, tempo)
+        if (tempo.length > 1 && tempo[0] === tempo[1]) {
+          for (let i = tempo.length; i > 0; i--) {
+            if (i !== tempo.length) {
+              debugger
+              key = '-'
+              range = 0
+            }
+            barArr.push({key, range, tempo: that.tempoMap[tempo.slice(0, 1)]})
+          }
+        } else {
+          barArr.push({key, range, tempo: that.tempoMap[tempo]})
+        }
       }
       this.notes.push(barArr)
     }
