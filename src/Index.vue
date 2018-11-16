@@ -75,7 +75,6 @@ export default {
           if (tempo.length > 1 && tempo[0] === tempo[1]) {
             for (let i = tempo.length; i > 0; i--) {
               if (i !== tempo.length) {
-                debugger
                 key = '-'
                 range = 0
               }
