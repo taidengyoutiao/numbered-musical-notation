@@ -5,9 +5,14 @@
       <div>
         <Bar v-for="(item, key) in notes" :key="key" :barData="item"></Bar>
       </div>
+      <hr>
+      <div class="title-inp-wrapper"><input type="text" v-model="title"></div>
       <div>
         <textarea class="content-inp" v-model="content"></textarea>
       </div>
+      <i class="material-icons" @click="importFile">add_circle</i>
+      <i class="material-icons" @click="exportFile" style="top: 72px;">get_app</i>
+      <input type="file" ref="json-input">
     </div>
     <div class="info">
       <h2>记谱法：</h2>
@@ -34,12 +39,19 @@
 </template>
 
 <script>
+import { MdButton } from 'vue-material/dist/components'
+import 'vue-material/dist/vue-material.min.css'
+import Vue from 'vue'
 import Bar from '@/components/Bar'
 import song from '@/test.js'
+import { Base64 } from 'js-base64'
+
+Vue.use(MdButton)
+
 export default {
   data () {
     return {
-      title: song.title,
+      title: '',
       content: '',
       tempoMap: {
         q: 4,
@@ -71,7 +83,6 @@ export default {
           key = note.replace(/[\^$]*/, '').replace(/[qwe]{1,4}/, '')
           range = note.replace(/[@#0-7][qwe]/, '').indexOf('^') !== -1 ? note.replace(/[@#0-7][qwe]/, '').length : -note.replace(/[@#0-7][qwe]/, '').length
           tempo = note.replace(/[\^$@#0-7]*/, '')
-          console.log(note, key, range, tempo)
           if (tempo.length > 1 && tempo[0] === tempo[1]) {
             for (let i = tempo.length; i > 0; i--) {
               if (i !== tempo.length) {
@@ -89,20 +100,60 @@ export default {
       return arr
     }
   },
+  methods: {
+    importFile () {
+      let that = this
+      let inputEle = this.$refs['json-input']
+      inputEle.click()
+      inputEle.addEventListener('change', function () {
+        let file = this.files[0]
+        if (file) {
+          let fr = new FileReader()
+          fr.readAsDataURL(file)
+
+          fr.onload = function () {
+            let o = JSON.parse(Base64.decode(fr.result.slice(29)))
+            that.title = o.title
+            that.content = o.content
+          }
+        }
+      })
+    },
+    exportFile () {
+      let blob = new Blob([JSON.stringify({title: this.title, content: this.content}, null, 2)], {type: 'application/json'})
+      let a = document.createElement('a')
+      a.download = `${this.title}.json`
+      a.href = window.URL.createObjectURL(blob)
+      a.click()
+    }
+  },
   components: { Bar },
   mounted () {
     this.content = song.content
+    this.title = song.title
   }
 }
 </script>
 
 <style scoped>
   .wrapper, .info {
+    position: relative;
     width: 960px;
     background-color: #fff;
     box-shadow: 0px 0px 10px #ccc;
     margin: 0 auto;
     padding: 30px;
+  }
+  .wrapper i {
+    position: absolute;
+    right: -48px;
+    top: 24px;
+    cursor: pointer;
+  }
+  .title-inp-wrapper {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
   }
   .info {
     background-color: #e1e1e1;
@@ -115,5 +166,8 @@ export default {
   .content-inp {
     width: 100%;
     min-height: 100px;
+  }
+  input[type="file"] {
+    display: none;
   }
 </style>
