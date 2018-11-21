@@ -88,9 +88,9 @@ export default {
           // key: 用来决定音高，用来渲染0-7和二分音符。表示法: 01234567
           // range: 用来决定音区，用来渲染音符上下的点点。表示法: $, ^
           // tempo: 用来决定音符时长，1为单位，16分音符的长度。表示法: q, w, e, qq, we, qw, qqq
-          key = note.replace(/[\^$]*/, '').replace(/[qwe]{1,4}/, '')
-          range = note.replace(/[@#0-7]*[qwe]*/, '').indexOf('^') !== -1 ? note.replace(/[@#0-7]*[qwe]*/, '').length : -note.replace(/[@#0-7]*[qwe]*/, '').length
-          tempo = note.replace(/[\^$@#0-7]*/, '')
+          key = note.replace(/[\^$]*/g, '').replace(/[qwe]{1,4}/g, '')
+          range = note.replace(/[@#0-7]*[qwe]*/g, '').indexOf('^') !== -1 ? note.replace(/[@#0-7]*[qwe]*/g, '').length : -note.replace(/[@#0-7]*[qwe]*/g, '').length
+          tempo = note.replace(/[\^$@#0-7]*/g, '')
           if (tempo.length > 1 && tempo[0] === tempo[1]) {
             for (let i = tempo.length; i > 0; i--) {
               if (i !== tempo.length) {
