@@ -89,7 +89,7 @@ export default {
           // range: 用来决定音区，用来渲染音符上下的点点。表示法: $, ^
           // tempo: 用来决定音符时长，1为单位，16分音符的长度。表示法: q, w, e, qq, we, qw, qqq
           key = note.replace(/[\^$]*/, '').replace(/[qwe]{1,4}/, '')
-          range = note.replace(/[@#0-7][qwe]*/, '').indexOf('^') !== -1 ? note.replace(/[@#0-7][qwe]*/, '').length : -note.replace(/[@#0-7][qwe]*/, '').length
+          range = note.replace(/[@#0-7]*[qwe]*/, '').indexOf('^') !== -1 ? note.replace(/[@#0-7]*[qwe]*/, '').length : -note.replace(/[@#0-7]*[qwe]*/, '').length
           tempo = note.replace(/[\^$@#0-7]*/, '')
           if (tempo.length > 1 && tempo[0] === tempo[1]) {
             for (let i = tempo.length; i > 0; i--) {
