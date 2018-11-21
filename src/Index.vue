@@ -66,22 +66,30 @@ export default {
     }
   },
   computed: {
+    // 从字符串解码为对象
     notes () {
       let that = this
       let content = this.content
       let arr = []
+      // 逗号分隔音符，空格分隔小节，删除一些换行和多余空格
       content = content.replace(/\r|\n/g, ' ')
       content = content.replace(/\s+/g, ' ').trim()
+      // 将曲子转换为小节数组组成的数组
       content = content.split(' ')
       for (let bar of content) {
         let barArr = []
+        // 将每个小节转换为音符对象组成的数组
         bar = bar.split(',')
         for (let note of bar) {
           let key = 0
           let range = 0
           let tempo = 0
+          // 从字符串单元中找回信息
+          // key: 用来决定音高，用来渲染0-7和二分音符。表示法: 01234567
+          // range: 用来决定音区，用来渲染音符上下的点点。表示法: $, ^
+          // tempo: 用来决定音符时长，1为单位，16分音符的长度。表示法: q, w, e, qq, we, qw, qqq
           key = note.replace(/[\^$]*/, '').replace(/[qwe]{1,4}/, '')
-          range = note.replace(/[@#0-7][qwe]/, '').indexOf('^') !== -1 ? note.replace(/[@#0-7][qwe]/, '').length : -note.replace(/[@#0-7][qwe]/, '').length
+          range = note.replace(/[@#0-7][qwe]*/, '').indexOf('^') !== -1 ? note.replace(/[@#0-7][qwe]*/, '').length : -note.replace(/[@#0-7][qwe]*/, '').length
           tempo = note.replace(/[\^$@#0-7]*/, '')
           if (tempo.length > 1 && tempo[0] === tempo[1]) {
             for (let i = tempo.length; i > 0; i--) {

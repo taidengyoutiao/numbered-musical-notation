@@ -53,7 +53,7 @@
 <script>
 export default {
   // noteKey: 1代表do
-  // noteRange: 1代表高音
+  // noteRange: 1代表高音, -1代表低音
   // noteTempo: 1代表16分音符, 2代表8分音符, 4代表4分音符
   props: ['noteKey', 'noteRange', 'noteTempo'],
   data () {
