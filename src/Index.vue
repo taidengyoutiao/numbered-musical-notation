@@ -35,18 +35,55 @@
         <li>空格用来区分小节</li>
       </ul>
     </div>
+    <div class="audio-wrapper">
+      <audio ref="C2" src="/static/piano/C2.mp3"></audio>
+      <audio ref="D2" src="/static/piano/D2.mp3"></audio>
+      <audio ref="E2" src="/static/piano/E2.mp3"></audio>
+      <audio ref="F2" src="/static/piano/F2.mp3"></audio>
+      <audio ref="G2" src="/static/piano/G2.mp3"></audio>
+      <audio ref="A2" src="/static/piano/A2.mp3"></audio>
+      <audio ref="B2" src="/static/piano/B2.mp3"></audio>
+
+      <audio ref="C3" src="/static/piano/C3.mp3"></audio>
+      <audio ref="D3" src="/static/piano/D3.mp3"></audio>
+      <audio ref="E3" src="/static/piano/E3.mp3"></audio>
+      <audio ref="F3" src="/static/piano/F3.mp3"></audio>
+      <audio ref="G3" src="/static/piano/G3.mp3"></audio>
+      <audio ref="A3" src="/static/piano/A3.mp3"></audio>
+      <audio ref="B3" src="/static/piano/B3.mp3"></audio>
+
+      <audio ref="C4" src="/static/piano/C4.mp3"></audio>
+      <audio ref="D4" src="/static/piano/D4.mp3"></audio>
+      <audio ref="E4" src="/static/piano/E4.mp3"></audio>
+      <audio ref="F4" src="/static/piano/F4.mp3"></audio>
+      <audio ref="G4" src="/static/piano/G4.mp3"></audio>
+      <audio ref="A4" src="/static/piano/A4.mp3"></audio>
+      <audio ref="B4" src="/static/piano/B4.mp3"></audio>
+
+      <audio ref="C5" src="/static/piano/C5.mp3"></audio>
+      <audio ref="D5" src="/static/piano/D5.mp3"></audio>
+      <audio ref="E5" src="/static/piano/E5.mp3"></audio>
+      <audio ref="F5" src="/static/piano/F5.mp3"></audio>
+      <audio ref="G5" src="/static/piano/G5.mp3"></audio>
+      <audio ref="A5" src="/static/piano/A5.mp3"></audio>
+      <audio ref="B5" src="/static/piano/B5.mp3"></audio>
+
+      <audio ref="C6" src="/static/piano/C6.mp3"></audio>
+      <audio ref="D6" src="/static/piano/D6.mp3"></audio>
+      <audio ref="E6" src="/static/piano/E6.mp3"></audio>
+      <audio ref="F6" src="/static/piano/F6.mp3"></audio>
+      <audio ref="G6" src="/static/piano/G6.mp3"></audio>
+      <audio ref="A6" src="/static/piano/A6.mp3"></audio>
+      <audio ref="B6" src="/static/piano/B6.mp3"></audio>
+    </div>
   </div>
 </template>
 
 <script>
-import { MdButton } from 'vue-material/dist/components'
 import 'vue-material/dist/vue-material.min.css'
-import Vue from 'vue'
 import Bar from '@/components/Bar'
 import song from '@/test.js'
 import { Base64 } from 'js-base64'
-
-Vue.use(MdButton)
 
 export default {
   data () {
@@ -62,7 +99,8 @@ export default {
         wq: 6,
         we: 3,
         ew: 3
-      }
+      },
+      audios: {}
     }
   },
   computed: {
@@ -71,6 +109,7 @@ export default {
       let that = this
       let content = this.content
       let arr = []
+      // 用来播放音乐，存放所有音符的时长
       // 逗号分隔音符，空格分隔小节，删除一些换行和多余空格
       content = content.replace(/\r|\n/g, ' ')
       content = content.replace(/\s+/g, ' ').trim()
@@ -79,7 +118,8 @@ export default {
       for (let bar of content) {
         let barArr = []
         // 将每个小节转换为音符对象组成的数组
-        bar = bar.split(',')
+        // 稍微处理一下特殊情况，逗号在小节的首和尾
+        bar = bar.replace(/^[,]*(.*?)[,]*$/, '$1').split(',')
         for (let note of bar) {
           let key = 0
           let range = 0
@@ -133,12 +173,17 @@ export default {
       a.download = `${this.title}.json`
       a.href = window.URL.createObjectURL(blob)
       a.click()
+    },
+    test () {
+
     }
   },
   components: { Bar },
   mounted () {
     this.content = song.content
     this.title = song.title
+
+    this.audios = this.$refs
   }
 }
 </script>
