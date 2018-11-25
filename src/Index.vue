@@ -12,6 +12,8 @@
       </div>
       <i class="material-icons" @click="importFile">add_circle</i>
       <i class="material-icons" @click="exportFile" style="top: 72px;">get_app</i>
+      <i v-show="playing === false" class="material-icons" @click="playMusic" style="top: 120px;">play_arrow</i>
+      <i v-show="playing === true" class="material-icons" @click="stopMusic" style="top: 120px;">stop</i>
       <input type="file" ref="json-input">
     </div>
     <div class="info">
@@ -100,7 +102,10 @@ export default {
         we: 3,
         ew: 3
       },
-      audios: {}
+      audios: {},
+      speed: 90,
+      keysArr: [],
+      playing: false
     }
   },
   computed: {
@@ -109,7 +114,8 @@ export default {
       let that = this
       let content = this.content
       let arr = []
-      // 用来播放音乐，存放所有音符的时长
+      // reset
+      that.keysArr = []
       // 逗号分隔音符，空格分隔小节，删除一些换行和多余空格
       content = content.replace(/\r|\n/g, ' ')
       content = content.replace(/\s+/g, ' ').trim()
@@ -138,9 +144,11 @@ export default {
                 range = 0
               }
               barArr.push({key, range, tempo: that.tempoMap[tempo.slice(0, 1)]})
+              that.keysArr.push({range, key: key.replace(/[#@]/, '').replace('-', '0'), tempo: that.tempoMap[tempo.slice(0, 1)]})
             }
           } else {
             barArr.push({key, range, tempo: that.tempoMap[tempo]})
+            that.keysArr.push({range, key: key.replace(/[#@]/, '').replace('-', '0'), tempo: that.tempoMap[tempo]})
           }
         }
         arr.push(barArr)
@@ -174,8 +182,45 @@ export default {
       a.href = window.URL.createObjectURL(blob)
       a.click()
     },
-    test () {
-
+    playMusic () {
+      this.playing = true
+      let that = this
+      let timeUnit = 60 / this.speed * 1000 / 4
+      let keyMap = {
+        1: 'C',
+        2: 'D',
+        3: 'E',
+        4: 'F',
+        5: 'G',
+        6: 'A',
+        7: 'B'
+      }
+      let i = 0
+      function recursivePlay () {
+        let item = that.keysArr[i]
+        if (item.key !== '0') {
+          if (!that.playing) {
+            return
+          }
+          that.$refs[keyMap[item.key] + (item.range + 4)].play()
+        }
+        setTimeout(() => {
+          if (item.key !== '0') {
+            that.$refs[keyMap[item.key] + (item.range + 4)].pause()
+            that.$refs[keyMap[item.key] + (item.range + 4)].currentTime = 0
+          }
+          i++
+          if (i < that.keysArr.length) {
+            recursivePlay()
+          } else {
+            that.playing = false
+          }
+        }, item.tempo * timeUnit)
+      }
+      recursivePlay()
+    },
+    stopMusic () {
+      this.playing = false
     }
   },
   components: { Bar },
