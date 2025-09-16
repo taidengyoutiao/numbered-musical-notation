@@ -72,21 +72,41 @@ const tempoMap = {
   ew: 3
 }
 
-const KEY_MAP = {
-  1: 'C',
-  2: 'D',
-  3: 'E',
-  4: 'F',
-  5: 'G',
-  6: 'A',
-  7: 'B'
+const DEGREE_TO_SEMITONE = {
+  1: 0,
+  2: 2,
+  3: 4,
+  4: 5,
+  5: 7,
+  6: 9,
+  7: 11
 }
 
-const baseNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
-const octaves = [1, 2, 3, 4, 5, 6, 7]
-const audioKeys = octaves.flatMap((octave) =>
-  baseNotes.map((note) => `${note}${octave}`)
-)
+const NOTE_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+const BASE_OCTAVE = 4
+
+const audioKeyDefinitions = [
+  { note: 'A', start: 0, end: 7 },
+  { note: 'Bb', start: 0, end: 7 },
+  { note: 'B', start: 0, end: 7 },
+  { note: 'C', start: 1, end: 8 },
+  { note: 'Db', start: 1, end: 8 },
+  { note: 'D', start: 1, end: 7 },
+  { note: 'Eb', start: 1, end: 7 },
+  { note: 'E', start: 1, end: 7 },
+  { note: 'F', start: 1, end: 7 },
+  { note: 'Gb', start: 1, end: 7 },
+  { note: 'G', start: 1, end: 7 },
+  { note: 'Ab', start: 1, end: 7 }
+]
+
+const audioKeys = audioKeyDefinitions.flatMap(({ note, start, end }) => {
+  const keys = []
+  for (let octave = start; octave <= end; octave += 1) {
+    keys.push(`${note}${octave}`)
+  }
+  return keys
+})
 
 const audioRefs = new Map()
 
@@ -99,6 +119,205 @@ const setAudioRef = (name) => (el) => {
 }
 
 const getTempoValue = (tempoCode) => tempoMap[tempoCode] ?? tempoMap.q
+
+const createHoldNotes = () => [
+  {
+    key: '-',
+    range: 0,
+    accidental: ''
+  }
+]
+
+const cloneNotes = (notes) =>
+  notes.map((note) => ({
+    key: String(note?.key ?? ''),
+    range: Number(note?.range) || 0,
+    accidental: note?.accidental === '#' || note?.accidental === '@' ? note.accidental : ''
+  }))
+
+const extractRangeMarkers = (note) => {
+  let range = 0
+  let index = 0
+  while (index < note.length) {
+    const char = note[index]
+    if (char === '^') {
+      range += 1
+      index += 1
+      continue
+    }
+    if (char === '$') {
+      range -= 1
+      index += 1
+      continue
+    }
+    break
+  }
+  return { range, length: index }
+}
+
+const parseSingleNote = (rawNote) => {
+  const trimmed = rawNote.trim()
+  if (!trimmed) {
+    return null
+  }
+  const { range, length } = extractRangeMarkers(trimmed)
+  let rest = trimmed.slice(length)
+  let accidental = ''
+  if (rest.startsWith('#') || rest.startsWith('@')) {
+    accidental = rest[0]
+    rest = rest.slice(1)
+  }
+  const key = rest || '0'
+  return {
+    key,
+    range,
+    accidental
+  }
+}
+
+const splitChordNotes = (chordContent) => {
+  const parts = []
+  let current = ''
+  for (const char of chordContent) {
+    if (char === '+') {
+      if (current.trim()) {
+        parts.push(current.trim())
+      }
+      current = ''
+      continue
+    }
+    current += char
+  }
+  if (current.trim()) {
+    parts.push(current.trim())
+  }
+  return parts
+}
+
+const splitBarNotes = (bar) => {
+  if (!bar) {
+    return []
+  }
+  const tokens = []
+  let current = ''
+  let depth = 0
+  for (const char of bar) {
+    if (char === '[') {
+      depth += 1
+      current += char
+      continue
+    }
+    if (char === ']') {
+      if (depth > 0) {
+        depth -= 1
+      }
+      current += char
+      continue
+    }
+    if (char === ',' && depth === 0) {
+      if (current.trim()) {
+        tokens.push(current.trim())
+      }
+      current = ''
+      continue
+    }
+    current += char
+  }
+  if (current.trim()) {
+    tokens.push(current.trim())
+  }
+  return tokens
+}
+
+const parseNoteCore = (noteCore) => {
+  const trimmedCore = noteCore.trim()
+  if (!trimmedCore) {
+    return []
+  }
+  if (trimmedCore.startsWith('[') && trimmedCore.endsWith(']')) {
+    const inner = trimmedCore.slice(1, -1)
+    const chordNotes = splitChordNotes(inner)
+    return chordNotes
+      .map((note) => parseSingleNote(note))
+      .filter((note) => note !== null)
+  }
+  const single = parseSingleNote(trimmedCore)
+  return single ? [single] : []
+}
+
+const expandTempo = (notes, tempoCode) => {
+  const normalizedTempo = tempoCode || 'q'
+  if (
+    normalizedTempo.length > 1 &&
+    normalizedTempo !== 'rot' &&
+    normalizedTempo.split('').every((char) => char === normalizedTempo[0])
+  ) {
+    const tempoValue = getTempoValue(normalizedTempo[0])
+    const events = [
+      {
+        tempo: tempoValue,
+        notes: cloneNotes(notes)
+      }
+    ]
+    for (let i = 1; i < normalizedTempo.length; i += 1) {
+      events.push({
+        tempo: tempoValue,
+        notes: createHoldNotes()
+      })
+    }
+    return events
+  }
+  return [
+    {
+      tempo: getTempoValue(normalizedTempo),
+      notes: cloneNotes(notes)
+    }
+  ]
+}
+
+const parseNoteToken = (rawNote) => {
+  const trimmedNote = rawNote.trim()
+  if (!trimmedNote) {
+    return []
+  }
+  const tempoMatch = trimmedNote.match(/(rot|[qwe]+)$/)
+  const tempoCode = tempoMatch ? tempoMatch[0] : ''
+  const noteCore = tempoCode
+    ? trimmedNote.slice(0, -tempoCode.length)
+    : trimmedNote
+  const notes = parseNoteCore(noteCore)
+  if (!notes.length) {
+    return []
+  }
+  return expandTempo(notes, tempoCode)
+}
+
+const resolveNoteToAudioKey = (note) => {
+  const normalizedKey = String(note?.key ?? '')
+  if (!/^[1-7]$/.test(normalizedKey)) {
+    return null
+  }
+  const baseSemitone = DEGREE_TO_SEMITONE[normalizedKey]
+  if (typeof baseSemitone !== 'number') {
+    return null
+  }
+  let semitone =
+    baseSemitone + (note?.accidental === '#' ? 1 : note?.accidental === '@' ? -1 : 0)
+  let octave = BASE_OCTAVE + (Number(note?.range) || 0)
+  while (semitone < 0) {
+    semitone += 12
+    octave -= 1
+  }
+  while (semitone >= 12) {
+    semitone -= 12
+    octave += 1
+  }
+  if (octave < 0 || octave > 8) {
+    return null
+  }
+  const noteName = NOTE_NAMES[semitone]
+  return noteName ? `${noteName}${octave}` : null
+}
 
 const notes = computed(() => {
   const arr = []
@@ -113,37 +332,13 @@ const notes = computed(() => {
   const bars = contentValue.split(' ')
   for (const rawBar of bars) {
     const normalizedBar = rawBar.replace(/^[,]*(.*?)[,]*$/, '$1')
-    const noteStrings = normalizedBar ? normalizedBar.split(',') : []
+    const noteStrings = splitBarNotes(normalizedBar)
     const barArr = []
-    for (let note of noteStrings) {
-      if (!note) {
-        continue
-      }
-      let key = note.replace(/[\^$]*/g, '').replace(/[qwe]{1,4}/g, '')
-      const rangeMarkers = note.replace(/[@#0-7]*[qwe]*/g, '')
-      const range = rangeMarkers.includes('^') ? rangeMarkers.length : -rangeMarkers.length
-      const tempoCode = note.replace(/[\^$@#0-7]*/g, '')
-      if (tempoCode.length > 1 && tempoCode[0] === tempoCode[1]) {
-        const tempoValue = getTempoValue(tempoCode.slice(0, 1))
-        for (let i = tempoCode.length; i > 0; i--) {
-          if (i !== tempoCode.length) {
-            key = '-'
-          }
-          barArr.push({ key, range, tempo: tempoValue })
-          newKeys.push({
-            range,
-            key: key.replace(/[#@]/, '').replace('-', '0'),
-            tempo: tempoValue
-          })
-        }
-      } else {
-        const tempoValue = getTempoValue(tempoCode)
-        barArr.push({ key, range, tempo: tempoValue })
-        newKeys.push({
-          range,
-          key: key.replace(/[#@]/, '').replace('-', '0'),
-          tempo: tempoValue
-        })
+    for (const note of noteStrings) {
+      const events = parseNoteToken(note)
+      for (const event of events) {
+        barArr.push(event)
+        newKeys.push(event)
       }
     }
     arr.push(barArr)
@@ -213,21 +408,28 @@ const playMusic = () => {
       return
     }
 
-    let audio
-    if (item.key !== '0') {
-      const audioKey = `${KEY_MAP[item.key] || ''}${item.range + 4}`
-      audio = audioRefs.get(audioKey)
+    const activeAudios = []
+    for (const note of item.notes ?? []) {
+      const audioKey = resolveNoteToAudioKey(note)
+      if (!audioKey) {
+        continue
+      }
+      const audio = audioRefs.get(audioKey)
       if (playing.value && audio) {
         audio.currentTime = 0
-        audio.play()
+        const playPromise = audio.play()
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {})
+        }
+        activeAudios.push(audio)
       }
     }
 
     setTimeout(() => {
-      if (item.key !== '0' && audio) {
+      activeAudios.forEach((audio) => {
         audio.pause()
         audio.currentTime = 0
-      }
+      })
 
       if (!playing.value) {
         return
@@ -239,7 +441,7 @@ const playMusic = () => {
       } else {
         playing.value = false
       }
-    }, item.tempo * timeUnit)
+    }, (item.tempo || 0) * timeUnit)
   }
 
   playNext()
