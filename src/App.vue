@@ -1,16 +1,14 @@
 <template>
   <div id="app">
-    <router-view/>
+    <RouterView />
   </div>
 </template>
 
-<script>
-export default {
-  name: 'App'
-}
+<script setup>
+import { RouterView } from 'vue-router'
 </script>
 
-<style>
+<style scoped>
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

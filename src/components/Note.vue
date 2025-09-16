@@ -1,32 +1,32 @@
 <template>
-  <div class="note" :style="{width: noteWidth}">
-    <sup v-if="String(noteKey).indexOf('@') !== -1">b</sup><sup v-if="String(noteKey).indexOf('#') !== -1">#</sup><span>{{String(noteKey) | noteKeyFilter}}</span>
+  <div class="note" :style="{ width: noteWidth }">
+    <sup v-if="hasFlat">b</sup><sup v-if="hasSharp">#</sup><span>{{ displayKey }}</span>
     <!-- tempo decoration -->
-    <template v-if="noteTempo == 1">
+    <template v-if="noteTempo === 1">
       <div class="deco-sixteen1"></div>
       <div class="deco-sixteen2"></div>
     </template>
-    <template v-if="noteTempo == 2">
+    <template v-if="noteTempo === 2">
       <div class="deco-eight"></div>
     </template>
-    <template v-if="noteTempo == 3">
+    <template v-if="noteTempo === 3">
       <div class="deco-eight"></div>
       <div class="deco-dot">
         <div class="dot"></div>
       </div>
     </template>
-    <template v-if="noteTempo == 6">
+    <template v-if="noteTempo === 6">
       <div class="deco-dot">
         <div class="dot"></div>
       </div>
     </template>
     <!-- range decoration -->
-    <template v-if="noteRange == 1">
+    <template v-if="noteRange === 1">
       <div class="deco-high" style="top: 0;">
         <div class="deco-high-dot"></div>
       </div>
     </template>
-    <template v-if="noteRange == 2">
+    <template v-if="noteRange === 2">
       <div class="deco-high" style="top: 0;">
         <div class="deco-high-dot"></div>
       </div>
@@ -34,12 +34,12 @@
         <div class="deco-high-dot"></div>
       </div>
     </template>
-    <template v-if="noteRange == -1">
+    <template v-if="noteRange === -1">
       <div class="deco-high" style="bottom: -3px;">
         <div class="deco-high-dot"></div>
       </div>
     </template>
-    <template v-if="noteRange == -2">
+    <template v-if="noteRange === -2">
       <div class="deco-high" style="bottom: -3px;">
         <div class="deco-high-dot"></div>
       </div>
@@ -50,35 +50,43 @@
   </div>
 </template>
 
-<script>
-export default {
-  // noteKey: 1代表do
-  // noteRange: 1代表高音, -1代表低音
-  // noteTempo: 1代表16分音符, 2代表8分音符, 4代表4分音符
-  props: ['noteKey', 'noteRange', 'noteTempo'],
-  data () {
-    return {
-      a: 1
-    }
+<script setup>
+import { computed } from 'vue'
+
+const props = defineProps({
+  noteKey: {
+    type: [String, Number],
+    default: ''
   },
-  computed: {
-    noteWidth () {
-      if (this.noteTempo === 1) {
-        return '10px'
-      } else if (this.noteTempo === 2 || this.noteTempo === 3) {
-        return '20px'
-      } else if (this.noteTempo === 4 || this.noteTempo === 6) {
-        return '40px'
-      } else {
-      }
-    }
+  noteRange: {
+    type: Number,
+    default: 0
   },
-  filters: {
-    noteKeyFilter (s) {
-      return s.replace(/[@#]/, '')
-    }
+  noteTempo: {
+    type: Number,
+    default: 4
   }
-}
+})
+
+const normalizedKey = computed(() => String(props.noteKey))
+const hasFlat = computed(() => normalizedKey.value.includes('@'))
+const hasSharp = computed(() => normalizedKey.value.includes('#'))
+const displayKey = computed(() => normalizedKey.value.replace(/[@#]/, ''))
+const noteRange = computed(() => Number(props.noteRange) || 0)
+const noteTempo = computed(() => Number(props.noteTempo) || 0)
+
+const noteWidth = computed(() => {
+  if (noteTempo.value === 1) {
+    return '10px'
+  }
+  if (noteTempo.value === 2 || noteTempo.value === 3) {
+    return '20px'
+  }
+  if (noteTempo.value === 4 || noteTempo.value === 6) {
+    return '40px'
+  }
+  return '40px'
+})
 </script>
 
 <style scoped lang="scss">

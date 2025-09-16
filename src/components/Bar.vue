@@ -1,43 +1,40 @@
 <template>
   <div class="bar">
-    <Note v-for="(item, key) in barData"
-      :key="`bar-${key}`"
-      :noteKey="item.key"
-      :noteRange="item.range"
-      :noteTempo="item.tempo"
-      :class="[mlArr.indexOf(Number(key+1)) !== -1 ? 'ml10' : '']">
-    </Note>
+    <Note
+      v-for="(item, index) in barData"
+      :key="`bar-${index}`"
+      :note-key="item.key"
+      :note-range="item.range"
+      :note-tempo="item.tempo"
+      :class="[mlArr.includes(index + 1) ? 'ml10' : '']"
+    />
   </div>
 </template>
 
-<script>
-import Note from '@/components/Note'
-export default {
-  props: {
-    barData: {
-      type: Array
+<script setup>
+import { computed } from 'vue'
+import Note from '@/components/Note.vue'
+
+const props = defineProps({
+  barData: {
+    type: Array,
+    default: () => []
+  }
+})
+
+const mlArr = computed(() => {
+  let sum = 0
+  const arr = []
+  props.barData.forEach((obj, index) => {
+    const tempo = Number(obj?.tempo) || 0
+    sum += tempo
+    if (sum > 4) {
+      sum = tempo
+      arr.push(index + 1)
     }
-  },
-  computed: {
-    // 目的是解决音符之间的分隔问题
-    // 例如，如果一个小结全都是16分音符，自然需要每一拍子之间小分隔一下
-    mlArr () {
-      let sum = 0
-      let arr = []
-      let count = 0
-      for (let obj of this.barData) {
-        count++
-        sum += obj.tempo
-        if (sum > 4) {
-          sum = obj.tempo
-          arr.push(count)
-        }
-      }
-      return arr
-    }
-  },
-  components: { Note }
-}
+  })
+  return arr
+})
 </script>
 
 <style scoped>
