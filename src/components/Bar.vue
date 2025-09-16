@@ -3,9 +3,7 @@
     <Note
       v-for="(item, index) in barData"
       :key="`bar-${index}`"
-      :note-key="item.key"
-      :note-range="item.range"
-      :note-tempo="item.tempo"
+      :note-data="item"
       :class="[mlArr.includes(index + 1) ? 'ml10' : '']"
     />
   </div>
