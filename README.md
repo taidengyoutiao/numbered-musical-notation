@@ -1,6 +1,6 @@
 ## info
 - 做一个简谱渲染，用来记录自己扒的歌
-<img src="./static/notation.jpg">
+<img src="./public/static/notation.jpg">
 
 ## rules
 - 音高
