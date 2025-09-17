@@ -2,9 +2,7 @@
   <div>
     <div class="wrapper">
       <h2 class="title">{{ title }}</h2>
-      <div>
-        <Bar v-for="(item, key) in notes" :key="key" :bar-data="item" />
-      </div>
+      <NotationCanvas :bars="notes" />
       <hr />
       <div class="title-inp-wrapper"><input type="text" v-model="title" /></div>
       <div>
@@ -51,7 +49,7 @@
 <script setup>
 import { Base64 } from 'js-base64'
 import { computed, onMounted, ref } from 'vue'
-import Bar from '@/components/Bar.vue'
+import NotationCanvas from '@/components/NotationCanvas.vue'
 import song from '@/test.js'
 
 const title = ref('')
@@ -467,6 +465,9 @@ onMounted(() => {
     right: -48px;
     top: 24px;
     cursor: pointer;
+  }
+  :deep(.notation-canvas) {
+    margin-bottom: 24px;
   }
   .title-inp-wrapper {
     text-align: center;
